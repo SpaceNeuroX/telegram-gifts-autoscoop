@@ -1,129 +1,129 @@
-# Автоскуп подарков Telegram (Bot + Userbot)
+# Telegram Gifts Autoscoop (Bot + Userbot)
 
-Этот репозиторий — бот для автоскупа новых подарков в Telegram сразу после выхода. Работает в двух режимах:
+This repository contains a bot that automatically buys newly released Telegram gifts as soon as they appear. It supports two modes:
 
-- Bot API — покупки осуществляются от имени бота
-- Userbot (личный аккаунт через Telethon) — покупки от имени вашего аккаунта, в т.ч. премиум-подарков
+- Bot API — purchases are made on behalf of the bot
+- Userbot (personal account via Telethon) — purchases are made on behalf of your account, including premium gifts
 
-Детектор новых подарков основан на базе из проекта https://github.com/arynyklas/tg_gifts_notifier. Всё лишнее удалено, оставлена логика получения/хранения каталога подарков и обёртки для автоскупа.
-
-
-## Возможности
-
-- Отслеживание появления новых подарков через Pyrogram (`detector.py`)
-- Уведомления пользователям бота о новых подарках
-- Гибкие ордера по цене/количеству и бюджету
-- Автопокупка:
-  - через Bot API (по умолчанию)
-  - через личный аккаунт (Telethon) — для случаев, когда Bot API не проходит или когда нужны премиум-подарки
-- Привязка личного аккаунта в интерфейсе бота
-- MongoDB-хранилище пользователей, ордеров и аккаунтов
+The new gifts detector is based on the project https://github.com/arynyklas/tg_gifts_notifier. Everything unnecessary was removed; the logic for fetching/storing the gifts catalog and wrappers for autoscoop were kept.
 
 
-## Требования
+## Features
+
+- Detect new gifts via Pyrogram (`detector.py`)
+- Notify bot users about new gifts
+- Flexible orders by price/quantity and budget
+- Auto-purchase:
+  - via Bot API (default)
+  - via personal account (Telethon) — useful when Bot API fails or for premium gifts
+- Link a personal account in the bot interface
+- MongoDB storage for users, orders, and accounts
+
+
+## Requirements
 
 - Python 3.11+
-- MongoDB (локально или в облаке)
+- MongoDB (local or cloud)
 
-Установите зависимости:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Примечание: зависимости для детектора — `pyrogram`, `pytz`.
+Note: detector dependencies — `pyrogram`, `pytz`.
 
 
-## Конфигурация
+## Configuration
 
-Проект использует два конфига: корневой `config.py` и `bot/config.py`.
+The project uses two configs: the root `config.py` and `bot/config.py`.
 
-### Корневой `config.py`
-Файл: `config.py`
+### Root `config.py`
+File: `config.py`
 
-Поля:
-- `SESSION_NAME` — имя сессии Pyrogram для детектора (каталог `sessions/`).
-- `API_ID`, `API_HASH` — параметры приложения Telegram для Pyrogram-клиента.
-- `CHECK_INTERVAL` — период опроса каталога подарков (сек).
-- `TIMEZONE` — таймзона логов (напр. `UTC`).
-- `DATA_FILEPATH` — путь к файлу данных подарков (по умолчанию `gifts_data/star_gifts.json`).
-- Уровни логирования в консоль/файл.
+Fields:
+- `SESSION_NAME` — Pyrogram session name for the detector (stored under `sessions/`).
+- `API_ID`, `API_HASH` — Telegram app credentials for the Pyrogram client.
+- `CHECK_INTERVAL` — polling interval for the gifts catalog (seconds).
+- `TIMEZONE` — logging timezone (e.g., `UTC`).
+- `DATA_FILEPATH` — path to gifts data file (default `gifts_data/star_gifts.json`).
+- Console/file log levels.
 
-Где взять `API_ID` и `API_HASH`:
-1. Зайдите на https://my.telegram.org
-2. Войдите под своим аккаунтом
-3. Перейдите в “API Development Tools”
-4. Создайте приложение и возьмите `api_id` и `api_hash`
+Where to get `API_ID` and `API_HASH`:
+1. Go to https://my.telegram.org
+2. Log in with your account
+3. Open “API Development Tools”
+4. Create an app and copy `api_id` and `api_hash`
 
-При первом запуске детектора Pyrogram создаст сессию (`sessions/SESSION_NAME.session`) и может запросить телефон/код 2FA в консоли.
+On the first detector launch, Pyrogram will create a session (`sessions/SESSION_NAME.session`) and may ask for phone/2FA code in the console.
 
-### Конфиг бота `bot/config.py`
-Файл: `bot/config.py`
+### Bot config `bot/config.py`
+File: `bot/config.py`
 
-Поля:
-- `BOT_TOKEN` — токен Telegram-бота (от @BotFather)
-- `MONGO_URL` — строка подключения к MongoDB (по умолчанию локально `mongodb://127.0.0.1:27017`)
-- `DB_NAME` — имя базы данных (по умолчанию `autoscoop`)
-- `TELETHON_API_ID`, `TELETHON_API_HASH` — параметры для Telethon (можно те же, что и в корневом конфиге)
-- `DEV_USER_ID` — ваш Telegram ID (админ)
-- `TAKE_COMMISSION` — брать ли комиссию с пополнений (если используете только для себя — `False`)
+Fields:
+- `BOT_TOKEN` — Telegram bot token (from @BotFather)
+- `MONGO_URL` — MongoDB connection string (default local `mongodb://127.0.0.1:27017`)
+- `DB_NAME` — database name (default `autoscoop`)
+- `TELETHON_API_ID`, `TELETHON_API_HASH` — credentials for Telethon (can be the same as root config)
+- `DEV_USER_ID` — your Telegram ID (admin)
+- `TAKE_COMMISSION` — whether to take commission on top-ups (if you are the only user — set `False`)
 
 
-## Запуск
+## Run
 
-Откройте два терминала в корне проекта.
+Open two terminals in the project root.
 
-1) Детектор новых подарков (Pyrogram):
+1) New gifts detector (Pyrogram):
 ```bash
 python detector.py
 ```
-- При первом запуске произойдёт авторизация и создание сессии в каталоге `sessions/`.
-- Детектор будет опрашивать каталог подарков и при появлении нового — передаст событие в автоскуп (`autoscoop.process_new_gift_for_autoscoop`).
+- On first run, authorization and session creation happen under `sessions/`.
+- The detector polls the gifts catalog and, on new gift detection, passes the event to autoscoop (`autoscoop.process_new_gift_for_autoscoop`).
 
-2) Бот управления и автоскупа (Aiogram):
+2) Management and autoscoop bot (Aiogram):
 ```bash
 python -m bot.main
 ```
-- В Telegram найдите вашего бота, выполните `/start`.
-- В меню настроек вы сможете:
-  - пополнить баланс
-  - создать/включить ордера (цена/лимиты/бюджет/канал назначения)
-  - привязать личный аккаунт (Telethon) для персональных покупок
+- In Telegram, find your bot and run `/start`.
+- In the settings menu you can:
+  - top up balance
+  - create/enable orders (price/limits/budget/target channel)
+  - link a personal account (Telethon) for personal purchases
 
 
-## Как работает покупка
+## How purchasing works
 
-- По событию нового подарка всем пользователям с активными ордерами отправляются уведомления.
-- Для каждого пользователя бот проверяет баланс, границы цены/предложения (supply), бюджет ордера и доступные лимиты подарка.
-- Покупка выполняется в таком приоритете:
-  1. Если подарок премиум — возможна покупка только через личный аккаунт (если привязан и разрешён флаг премиум-покупок).
-  2. Если включён режим «только личные покупки» — покупка идёт через Telethon.
-  3. Иначе попытка через Bot API. При неудаче (ошибка/ограничения) возможен фолбэк на личный аккаунт, если он подключён и разрешён.
-- Все изменения баланса и бюджетов ордеров фиксируются в MongoDB.
+- When a new gift appears, all users with active orders receive a notification.
+- For each user, the bot checks balance, price/supply bounds, order budget, and available gift limits.
+- Purchases follow this priority:
+  1. If the gift is premium — it can only be purchased via a personal account (if linked and premium flag is allowed).
+  2. If “only personal purchases” is enabled — purchase goes through Telethon.
+  3. Otherwise, try via Bot API. If it fails (errors/restrictions), a fallback to the personal account is possible if it’s linked and allowed.
+- All balance and order budget updates are stored in MongoDB.
 
-Ключевые файлы:
-- `detector.py` — запуск Pyrogram-клиента и отслеживание новых подарков
-- `autoscoop.py` — логика обработки новых подарков и покупок (Bot API / Telethon)
-- `bot/main.py` — точка входа для Aiogram-бота
-- `bot/utils/telethon_client.py` — утилиты для привязки и покупок через личный аккаунт
+Key files:
+- `detector.py` — starts Pyrogram client and tracks new gifts
+- `autoscoop.py` — handles new gifts and purchases (Bot API / Telethon)
+- `bot/main.py` — entry point for the Aiogram bot
+- `bot/utils/telethon_client.py` — utilities for linking and buying via personal account
 
 
 ## MongoDB
 
-- По умолчанию используется `MONGO_URL=mongodb://127.0.0.1:27017` и база `autoscoop`.
-- Таблицы (коллекции) создаются автоматически при первом обращении.
+- By default, `MONGO_URL=mongodb://127.0.0.1:27017` and database `autoscoop`.
+- Collections are created automatically on first use.
 
 
-## Полезные советы
+## Tips
 
-- Держите два процесса (детектор и бот) запущенными одновременно.
-- Для премиум-подарков требуется привязанный аккаунт с Telegram Premium.
-- Если хотите избегать ограничений Bot API — используйте режим покупок через личный аккаунт.
+- Keep both processes (detector and bot) running concurrently.
+- Premium gifts require a linked account with Telegram Premium.
+- To avoid Bot API limitations, use personal account purchases.
 
 
-## Лицензия и благодарности
+## License and credits
 
-- База детектора подарков взята из проекта: https://github.com/arynyklas/tg_gifts_notifier
-- Автор: @dark_qubit
-- Канал: https://t.me/dq_devlog
-- Поддержать автора (TON): `UQCqI9aG0_BHHSp7-GMMpJuJ4PH84OdT0T1cl_dbUWifcPys`
+- Gifts detector base from: https://github.com/arynyklas/tg_gifts_notifier
+- Author: @dark_qubit
+- Channel: https://t.me/dq_devlog
+- Support the author (TON): `UQCqI9aG0_BHHSp7-GMMpJuJ4PH84OdT0T1cl_dbUWifcPys`
