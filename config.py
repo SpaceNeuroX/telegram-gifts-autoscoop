@@ -1,0 +1,13 @@
+import logging
+import constants
+
+SESSION_NAME = "account"
+
+API_ID = 123
+API_HASH = "123"
+
+CHECK_INTERVAL = 1.0
+DATA_FILEPATH = constants.GIFTS_DATA_FILEPATH
+TIMEZONE = "UTC"
+CONSOLE_LOG_LEVEL = logging.DEBUG
+FILE_LOG_LEVEL = logging.INFO
