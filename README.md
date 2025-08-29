@@ -7,6 +7,10 @@ This repository contains a bot that automatically buys newly released Telegram g
 
 The new gifts detector is based on the project https://github.com/arynyklas/tg_gifts_notifier. Everything unnecessary was removed; the logic for fetching/storing the gifts catalog and wrappers for autoscoop were kept.
 
+## Official bot
+
+An official instance hosted on our servers: **@AutoScoopSystemBot** — https://t.me/AutoScoopSystemBot
+
 
 ## Features
 
